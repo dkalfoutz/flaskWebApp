@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, escape 
 #from flask import redirect
 from vsearch import search4letters
 #module's name: flask, class' name: Flask
@@ -69,17 +69,39 @@ app = Flask(__name__)
 # top of your code), then invoke the function as needed.
 ###### SOS SOS SOS SOS ################
 ############################################
+
+#FUNCTION: eisodos: flask_request: objekt, res: str:
+#ta koina simeia twn dio inputs 
+def log_request(req: "flask_request:", res: str) -> None:
+	#anoigw to arxeio vsearch.log ws append leitourgeia, 
+	#kai eisagw entos tou to res, diladi ta koina simeia
+	#twn 2 input tou xristi, kai epistrefei to apotelesma tou fakelou se ena
+	#objekt, to legomeno file stream, sto epilegen onoma
+	#log.
+	with open("vsearch.log", "a") as log:
+		#print(str(dir(req)), res, file = log)
+		print(req.form, req.remote_addr, req.user_agent, res, file = log, sep = "|")
+
+"""
 @app.route("/")
 def hello() -> "302":
 	#return "hello world from Flask!"
 	return redirect("/entry")
+"""
 
 @app.route('/search4', methods = ["POST"])
 def do_search() -> 'html':
-	#phrase = request.form['phrase']
-	#letters = request.form['letters']
-	#title = 'Here are your results:'
-	#results = str(search4letters(phrase, letters))
+	phrase = request.form['phrase']
+	letters = request.form['letters']
+	title = 'Here are your results:'
+	results = str(search4letters(phrase, letters))
+	#twra p egine invoke t en logw URL, thelw to 
+	#string me ta koina grammata (ap t 2 input
+	#pou edwse o xristis) na to perasw ws orisma
+	#kalwntas t funtion pou orisa pio panw, kai h
+	#opoia anoigei to log kai eisagei t string afto
+	#me ta koina grammata. 
+	log_request(request, results)
 	return render_template('results.html',
 							the_title=title,
 							the_phrase=phrase,
@@ -95,6 +117,28 @@ def do_search() -> 'html':
 def entry_page() -> 'html':
 	return render_template("entry.html", the_title = "Welcome to search4letters on the web!")
 
+
+#add support for the /viewlog URL to my webapp. When my 
+#webapp receives a request for /viewlog, it should open the 
+#vsearch.log file, read in all of its data, and then send the
+#data to the waiting browser. 
+@app.route("/viewlog")
+def view_the_log() -> str: 
+	#no input
+	#return a string to its caller; the string will be
+	#concatenation of all of the lines of data from the
+	#vsearch.log file. 
+	with open("vsearch.log") as log:
+		#read all the lines from the file. 
+		#No need to loop through the file, reading each line.
+		#read method: returns the entire contents of the file 
+		#"in one go".
+		contents = log.read()
+
+	#with "with", the file closes. Ready to send the
+	#data back to the waiting browser.
+	return escape(contents) #afairese ta < kai >
+							#k vale lt kai gt
 
 #The final line of code takes the Flask object 
 #assigned to the app variable and asks
